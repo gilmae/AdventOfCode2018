@@ -35,22 +35,12 @@ end
 sleep_totals = sleep_log.map do |guard,minutes|
     {guard=>minutes.inject(0) {|m,obj| m + obj.last}}
 end
-p sleep_totals.flatten
 
-max = -1
-guard = 0
-sleep_totals.each{ |item| 
-    k = item.first.first
-    v = item.first.last
 
-    if v > max
-        guard = k
-        max = v
-    end
-}
-max = -1
-minute = 0
+id, minutes = sleep_log.max_by { |_, v| v.values.inject(0) { |memo, v| memo + v} }
+puts id * minutes.keys.max_by(&minutes)
 
-sleep_log[guard].each { |k,v| (minute = k;max = v) if v > max}
-puts guard * minute
+id, minutes = sleep_log.max_by { |_, v| v.values.max }
+puts id * minutes.keys.max_by(&minutes)
+
 
