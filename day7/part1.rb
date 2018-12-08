@@ -24,7 +24,11 @@ def find_freed keys, prerequisites
     }.compact
 end
 
-def assign_work workers, free, keys, prequisites
+free = find_freed(keys, prerequisites).uniq.sort
+
+path = ""
+
+while !free.empty?
     freed = free.shift
 
     path += freed
@@ -37,15 +41,6 @@ def assign_work workers, free, keys, prequisites
     free += find_freed(keys, prerequisites)
 
     free = free.uniq.sort
-end
-
-free = find_freed(keys, prerequisites).uniq.sort
-
-path = ""
-
-while !free.empty?
-    
-    
 end
 
 puts path
