@@ -1,46 +1,59 @@
 #! /usr/bin/ruby
+# PART 1
+#STEPDELAY = 0
+#WORKERS = 1
+
+# Part 2
+STEPDELAY = 60
+WORKERS = 5 
+
 instructions = []
 instructions = File.open("input.txt", "r") { |f| f.readlines}.map { |l| l.scan(/\s([A-Z])\s/).flatten}
 
-keys = instructions.flatten.uniq
 
-prerequisites = {}
-
-prerequisites = keys.map { |k| 
-    [k, []]
-}.to_h
-
-have_prequisites = {}
-
-instructions.each { |(p,s) |
-    prerequisites[s] << p
-    have_prequisites[s] = true
-}
-
-# find free keys, those that have pre-requisites
-def find_freed keys, prerequisites
-    keys.map { |k| 
-        k if prerequisites[k].empty?
-    }.compact
-end
-
-free = find_freed(keys, prerequisites).uniq.sort
-
+prerequisites = instructions.flatten.uniq
+goal_size = prerequisites.size
 path = ""
 
-while !free.empty?
-    freed = free.shift
+# find free keys, those that have no pre-requisites
+find_freed = -> {
+    prerequisites.select { |pre| instructions.none? { |_, dependant| pre == dependant } }.min
+}
 
-    path += freed
-    keys.delete(freed)
 
-    keys.each { |k| 
-        prerequisites[k].delete(freed)
-    }
-
-    free += find_freed(keys, prerequisites)
-
-    free = free.uniq.sort
+def time_to_do work
+    STEPDELAY + 1 + work.ord - "A".ord
 end
 
-puts path
+workers = Array.new(WORKERS, nil)
+
+0.step do |second|
+    workers.each_with_index{ |(work,complete_at),i| 
+        if complete_at == second
+            path += work
+            workers[i] = nil
+            instructions.reject! { |x, _| x == work }
+        end
+    }
+
+    # Get out if done
+    if path.size == goal_size
+        puts second
+        puts path
+        break
+    end
+    
+    workers.each_index{ |i| 
+        # If worker is working, sip
+        next if workers[i]
+
+        task = find_freed.call
+        
+        next unless task
+
+        task_time = second + time_to_do(task)
+
+        workers[i] = [task, task_time]
+        prerequisites.delete task
+    }
+end
